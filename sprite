@@ -1,0 +1,308 @@
+import pygame
+from config import *
+import math
+import random
+
+
+class Spritesheet:
+    def __init__(self, file):
+        self.sheet = pygame.image.load(file).convert()
+
+    def get_sprite(self, x, y, width, height):
+        sprite = pygame.Surface([width, height])
+        sprite.blit(self.sheet, (0, 0), (x, y, width, height))
+        sprite.set_colorkey(BLACK)
+        return sprite
+
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = PLAYER_LAYER
+        self.groups = self.game.all_sprite
+        pygame.sprite.Sprite.__init__(self, self.groups)
+        # j'ajoute le joueur au groupe ''all_sprite'' pour y acceder via game
+
+        self.x = x * TAILLE_TUILE
+        self.y = y * TAILLE_TUILE
+        self.width = TAILLE_TUILE
+        self.height = TAILLE_TUILE
+
+        self.x_diff = 0
+        self.y_diff = 0
+
+        self.direction = 'down'
+        self.animation_loop = 1
+
+        self.image = self.game.character_spritesheet.get_sprite(2, 3, self.width, self.height)
+        # je crée mes tuiles de 32 par 32 et je le définie en tant que sprite
+        self.rect = self.image.get_rect()  # je définie rect pour qu'il ait la même taille que mes tuiles
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+    def update(self):
+        self.mouvement()
+        self.animate()
+        self.rect.x += self.x_diff
+        self.collide_blocks('x')
+        self.rect.y += self.y_diff
+        self.collide_blocks('y')
+        #
+        self.x_diff = 0
+        self.y_diff = 0
+
+    def mouvement(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_z] or keys[pygame.K_UP]:
+            self.y_diff -= VITESSE_JOUEUR
+            self.direction = 'up'
+        if keys[pygame.K_q] or keys[pygame.K_LEFT]:
+            self.x_diff -= VITESSE_JOUEUR
+            self.direction = 'left'
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+            self.y_diff += VITESSE_JOUEUR
+            self.direction = 'down'
+        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+            self.x_diff += VITESSE_JOUEUR
+            self.direction = 'right'
+    def collide_blocks(self, direction):
+        if direction == "x":
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            if hits:
+                if self.x_diff > 0:
+                    self.rect.x = hits[0].rect.left - self.rect.width
+                if self.x_diff < 0:
+                    self.rect.x = hits[0].rect.right
+        if direction == "y":
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            if hits:
+                if self.y_diff > 0:
+                    self.rect.y = hits[0].rect.top - self.rect.height
+                if self.y_diff < 0:
+                    self.rect.y = hits[0].rect.bottom
+
+    def animate(self):
+        down_animations = [self.game.character_spritesheet.get_sprite(3, 2, self.width, self.height),
+                           self.game.character_spritesheet.get_sprite(35, 2, self.width, self.height),
+                           self.game.character_spritesheet.get_sprite(68, 2, self.width, self.height)]
+
+        up_animations = [self.game.character_spritesheet.get_sprite(3, 34, self.width, self.height),
+                         self.game.character_spritesheet.get_sprite(35, 34, self.width, self.height),
+                         self.game.character_spritesheet.get_sprite(68, 34, self.width, self.height)]
+
+        left_animations = [self.game.character_spritesheet.get_sprite(3, 98, self.width, self.height),
+                           self.game.character_spritesheet.get_sprite(35, 98, self.width, self.height),
+                           self.game.character_spritesheet.get_sprite(68, 98, self.width, self.height)]
+
+        right_animations = [self.game.character_spritesheet.get_sprite(3, 66, self.width, self.height),
+                            self.game.character_spritesheet.get_sprite(35, 66, self.width, self.height),
+                            self.game.character_spritesheet.get_sprite(68, 66, self.width, self.height)]
+        if self.direction == "down":
+            if self.y_diff == 0:
+                self.image = self.game.character_spritesheet.get_sprite(3, 2, self.width, self.height)
+            else:
+                self.image = down_animations[math.floor(self.animation_loop)]
+                self.animation_loop += 0.1
+                if self.animation_loop >= 3:
+                    self.animation_loop = 1
+
+        if self.direction == "up":
+            if self.y_diff == 0:
+                self.image = self.game.character_spritesheet.get_sprite(3, 34, self.width, self.height)
+            else:
+                self.image = up_animations[math.floor(self.animation_loop)]
+                self.animation_loop += 0.1
+                if self.animation_loop >= 3:
+                    self.animation_loop = 1
+        if self.direction == "left":
+            if self.x_diff == 0:
+                self.image = self.game.character_spritesheet.get_sprite(3, 98, self.width, self.height)
+            else:
+                self.image = left_animations[math.floor(self.animation_loop)]
+                self.animation_loop += 0.1
+                if self.animation_loop >= 3:
+                    self.animation_loop = 1
+        if self.direction == "right":
+            if self.x_diff == 0:
+                self.image = self.game.character_spritesheet.get_sprite(3, 66, self.width, self.height)
+            else:
+                self.image = right_animations[math.floor(self.animation_loop)]
+                self.animation_loop += 0.1
+                if self.animation_loop >= 3:
+                    self.animation_loop = 1
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = ENEMY_LAYER
+        self.groups = self.game.all_sprite, self.game.ennemie
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x*TAILLE_TUILE
+        self.y = y*TAILLE_TUILE
+        self.width = TAILLE_TUILE
+        self.height = TAILLE_TUILE
+
+        self.x_diff = 0
+        self.y_diff = 0
+
+        self.direction = random.choice(['left', 'right'])
+        self.animation_loop = 1
+        self.mouvement_loop = 0
+        self.max_dist = random.randint(7, 30)
+
+        self.image = self.game.enemy_spritesheet.get_sprite(3, 2, self.width, self.height)
+        self.image.set_colorkey(BLACK)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+    def update(self):
+        self.mouvement()
+        self.animation()
+        self.rect.x += self.x_diff
+        self.rect.y += self.y_diff
+        self.x_diff = 0
+        self.y_diff = 0
+
+    def mouvement(self):
+        if self.direction == 'left':
+            self.x_diff -= VITESSE_ENNEMIE
+            self.mouvement_loop -= 1
+            if self.mouvement_loop <= -self.max_dist:
+                self.direction = 'right'
+        if self.direction == 'right':
+            self.x_diff += VITESSE_ENNEMIE
+            self.mouvement_loop += 1
+            if self.mouvement_loop >= self.max_dist:
+                self.direction = 'left'
+
+    def animation(self):
+
+        left_animations = [self.game.enemy_spritesheet.get_sprite(3, 98, self.width, self.height),
+                           self.game.enemy_spritesheet.get_sprite(35, 98, self.width, self.height),
+                           self.game.enemy_spritesheet.get_sprite(68, 98, self.width, self.height)]
+
+        right_animations = [self.game.enemy_spritesheet.get_sprite(3, 66, self.width, self.height),
+                            self.game.enemy_spritesheet.get_sprite(35, 66, self.width, self.height),
+                            self.game.enemy_spritesheet.get_sprite(68, 66, self.width, self.height)]
+
+        if self.direction == "left":
+            if self.x_diff == 0:
+                self.image = self.game.enemy_spritesheet.get_sprite(3, 98, self.width, self.height)
+            else:
+                self.image = left_animations[math.floor(self.animation_loop)]
+                self.animation_loop += 0.1
+                if self.animation_loop >= 3:
+                    self.animation_loop = 1
+        if self.direction == "right":
+            if self.x_diff == 0:
+                self.image = self.game.enemy_spritesheet.get_sprite(3, 66, self.width, self.height)
+            else:
+                self.image = right_animations[math.floor(self.animation_loop)]
+                self.animation_loop += 0.1
+                if self.animation_loop >= 3:
+                    self.animation_loop = 1
+
+class Block(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = BLOCK_LAYER
+        self.groups = self.game.all_sprite, self.game.blocks
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TAILLE_TUILE
+        self.y = y * TAILLE_TUILE
+        self.width = TAILLE_TUILE
+        self.height = TAILLE_TUILE
+
+        self.image = self.game.terrain_spritesheet.get_sprite(928, 480, self.width, self.height)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+class Flaque(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = BLOCK_LAYER
+        self.groups = self.game.all_sprite, self.game.blocks
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TAILLE_TUILE
+        self.y = y * TAILLE_TUILE
+        self.width = TAILLE_TUILE
+        self.height = TAILLE_TUILE
+
+        self.image = self.game.terrain_spritesheet.get_sprite(864, 0, self.width, self.height)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+class Lave(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = BLOCK_LAYER
+        self.groups = self.game.all_sprite, self.game.blocks
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TAILLE_TUILE
+        self.y = y * TAILLE_TUILE
+        self.width = TAILLE_TUILE
+        self.height = TAILLE_TUILE
+
+        self.image = self.game.terrain_spritesheet.get_sprite(480, 0, self.width, self.height)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+class Ground(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprite
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TAILLE_TUILE
+        self.y = y * TAILLE_TUILE
+        self.width = TAILLE_TUILE
+        self.height = TAILLE_TUILE
+        self.image = self.game.terrain_spritesheet.get_sprite(64, 352, self.width, self.height)
+        self.rect = self.image.get_rect()
+        self.rect.y = self.y
+        self.rect.x = self.x
+
+class Fleur(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprite
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TAILLE_TUILE
+        self.y = y * TAILLE_TUILE
+        self.width = TAILLE_TUILE
+        self.height = TAILLE_TUILE
+        self.image = self.game.terrain_spritesheet.get_sprite(128, 352, self.width, self.height)
+        self.rect = self.image.get_rect()
+        self.rect.y = self.y
+        self.rect.x = self.x
+
+class GroundBoss(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprite
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TAILLE_TUILE
+        self.y = y * TAILLE_TUILE
+        self.width = TAILLE_TUILE
+        self.height = TAILLE_TUILE
+        self.image = self.game.terrain_spritesheet.get_sprite(416, 160, self.width, self.height)
+        self.rect = self.image.get_rect()
+        self.rect.y = self.y
+        self.rect.x = self.x
