@@ -1,0 +1,232 @@
+import pygame,sys
+from config import *
+from config2 import *
+from sprite import *
+pygame.init()
+
+
+#classe des boutons des modes de jeux(affichage debut)
+class Button(pygame.sprite.Sprite):
+    def __init__(self, img, scale, x, y):
+        super(Button, self).__init__()
+        self.image = img
+        self.scale = scale
+        self.image = pygame.transform.scale(self.image, self.scale)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.clicked = False
+
+    def update_image(self, img):
+        """
+        modifie la taille de l'image
+        entre: self,win
+        """
+        self.image = pygame.transform.scale(img, self.scale) #modifie la taille du sprite
+
+    def click(self):
+        """
+        verifie si on clique dessus avec la souris
+        Entre:self
+        sortie:Bool
+        """
+        action=False
+        pos=pygame.mouse.get_pos()
+        if self.rect.collidepoint(pos): #si la souris est  sur le bouton
+            if pygame.mouse.get_pressed()[0] and not self.clicked: #si on clique
+                action = True
+                self.clicked = True
+            if not pygame.mouse.get_pressed()[0]: #si on ne clique pas
+                self.clicked = False
+            return action
+
+    def draw(self, win):
+        """
+        fait apparaitre le bouton renvoie si le bouton est clique
+        entre: self,win
+        Sortie: Bool
+        """
+        win.blit(self.image, self.rect)
+        return Button.click(self)       #renvoie si le bouton a été cliqué
+
+#classe du boss
+class Boss(pygame.sprite.Sprite):
+    def __init__(self, img, scale, x, y):
+        super(Boss, self).__init__()
+        self.image = img
+        self.scale = scale
+        self.image = pygame.transform.scale(self.image, self.scale)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.hitbox=(self.rect.x,self.rect.y,self.scale[0],self.scale[1]-16)
+        self.visible=True
+        self.Hp=100
+
+    def update_image(self, img):
+        """
+        modifie la taille de l'image
+        entre: self, image
+        """
+        self.image = pygame.transform.scale(img, self.scale) #modifie la taille du sprite
+
+    def draw(self, win):      # verifie si il a toujours des point de vie
+        """
+        dessine le boss
+        entre: self,win
+        """
+        if self.visible:
+            win.blit(self.image, self.rect)
+            pygame.draw.rect(win,(10,10,10),(self.hitbox[0] , self.hitbox[1]-20 , 100 , 10))
+            pygame.draw.rect(win,(180,0,0),(self.hitbox[0] , self.hitbox[1]-20 ,150 - 1.5*(100-self.Hp) , 10)) #dessine la barre de vie
+            self.hitbox=(self.rect.x , self.rect.y , self.scale[0] , self.scale[1]-16)  #definie la hitbox du boss
+            pygame.draw.rect(win, (255,0,0), self.hitbox,2)  #dessine la hitbox
+        else:
+            self.hitbox=(0,0,0,0) #fait disparaitre sa hitbox
+
+
+    def hit(self):
+        """
+        fait perdre des pv a l'objet
+        return : pv restant, int
+        """
+        if self.Hp>0:
+            self.Hp-=1
+        else:
+            self.visible=False
+
+    def boss_mort(self):
+        if self.Hp<=0:
+            img=pygame.image.load("img/boss2.png")
+            self.image=pygame.transform.scale(img, self.scale)
+            return True
+
+
+
+
+#classe attaque du boss
+class Attaqueboss(pygame.sprite.Sprite):
+    def __init__(self,Vitesse,scale,img,x,y):
+        pygame.sprite.Sprite.__init__(self)
+
+        self.vitesse=Vitesse
+        self.image=img
+        self.scale = scale
+        self.image = pygame.transform.scale(self.image, self.scale)
+        self.rect=self.image.get_rect()
+        self.rect.x=x
+        self.rect.y=y
+        self.hitbox=(self.rect.x,self.rect.y,self.scale[0],self.scale[1])
+
+    def update(self):
+        """
+        modifie la taille de l'image
+        entre: self,image
+        """
+        self.image = pygame.transform.scale(img, self.scale) #modifie la taille du sprite
+
+    def rebond(self):
+        """
+        deplace et fait rebondir les attaques du boss
+        entre: self
+        return : vitesse de la balle : int
+        """
+
+        self.vitesse[0]=-self.vitesse[0]
+        self.vitesse[1]=-self.vitesse[1] #la balle se deplace dans la direction opposé
+        return self.vitesse
+
+    def draw(self,win):
+        """
+        dessine les attaaques du boss
+        entre: self,win
+        """
+        if(self.rect.left<0) or (self.rect.right>1200) or (self.rect.top<0) or (self.rect.bottom>600): #si la balle sort de l'ecran
+            self.vitesse=Attaqueboss.rebond(self) #appelle la fonction rebond
+        self.rect=self.rect.move(self.vitesse) #fait deplacer la balle
+        win.blit(self.image, self.rect)
+        self.hitbox=(self.rect.x,self.rect.y,self.scale[0],self.scale[1]) # définie la hitbox de l'attaque ennemie
+        pygame.draw.rect(win, (255,0,0),self.hitbox,2)   #dessine la hitbox
+
+
+#classe des objet destructible
+class Objet_destructible(pygame.sprite.Sprite):
+    def __init__(self, img, scale, x, y):
+        super(Objet_destructible, self).__init__()
+
+        self.image = img
+        self.scale = scale
+        self.image = pygame.transform.scale(self.image, self.scale)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.hitbox=(self.rect.x,self.rect.y,self.scale[0],self.scale[1]-16)
+        self.visible=True
+        self.Hp=1
+
+    def update_image(self, img):
+        """
+        modifie la taille de l'image
+        entre: self, image
+        """
+        self.image = pygame.transform.scale(img, self.scale) #modifie la taille du sprite
+
+    def draw(self, win):      #dessine l'objet
+        """
+        dessine l'objet
+        entre:self,win
+        """
+        if self.visible:
+            win.blit(self.image, self.rect)
+            self.hitbox=(self.rect.x,self.rect.y,self.scale[0],self.scale[1]-16) #definie la hitbox de l'objet
+            pygame.draw.rect(win, (255,0,0),self.hitbox,2)  #dessine la hitbox
+        else:
+            self.hitbox=(0,0,0,0) #fait disparaitre sa hitbox
+
+    def hit(self):
+        """
+        fait perdre des pv a l'objet
+        return : pv restant, int
+        """
+        if self.Hp>0:
+            self.Hp-=1
+        else:
+            self.visible=False
+
+
+
+#classe des objets non destructible
+class Objet_non_destructible(pygame.sprite.Sprite):
+    def __init__(self, img, scale, x, y):
+        super(Objet_non_destructible, self).__init__()
+
+        self.image = img
+        self.scale = scale
+        self.image = pygame.transform.scale(self.image, self.scale)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.hitbox=(self.rect.x,self.rect.y,self.scale[0],self.scale[1]-16)
+        self.Hp=1
+
+    def update_image(self, img):
+        """
+        modifie la taille de l'image
+        entre: self, image
+        """
+        self.image = pygame.transform.scale(img, self.scale) #modifie la taille du sprite
+
+    def draw(self, win):
+        """
+        dessine l'objet
+        entre:self,win
+        """
+        win.blit(self.image, self.rect)
+        self.hitbox=(self.rect.x,self.rect.y,self.scale[0],self.scale[1]-16) #definie la hitbox de l'objet
+        pygame.draw.rect(win, (255,0,0),self.hitbox,2)  #dessine la hitbox
+
+    def hit(self):
+        """
+        l'objet ne perd pas de pv car il est indestructible
+        """
+        self.Hp=self.Hp
