@@ -1,0 +1,46 @@
+WIN_WIDTH = 1200 # je crée la variable de la largeur
+WIN_HEIGHT = 600
+
+ENEMY_LAYER = 3
+PLAYER_LAYER = 4  # je dit a pygame d'afficher mon personnage en deuxième(a la couche 2)
+BLOCK_LAYER = 2 # je dit a pygame d'afficher mon mur en premier(a la couche 1)
+GROUND_LAYER = 1
+
+TAILLE_TUILE = 32  # Je définie la taille de mes tuiles
+
+RED = (255, 0, 0)  # je définie la couleur rouge
+BLACK = (0, 0, 0)  # je définie la couleur noir
+BLUE = (0, 0, 255)
+WHITE = (255, 255, 255)
+
+GROUND_BOSS = (416, 160)
+
+FPS = 60
+VITESSE_JOUEUR = 3
+VITESSE_ENNEMIE = 2
+map = [
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BP............E..............B',
+    'B...........V................B',
+    'B..BB.........V..........BB..B',
+    'B..B......................B..B',
+    'B....F......BBBBBB...........B',
+    'B...............FF...........B',
+    'B..F............FFF..........B',
+    'B....B...F.........E....B....B',
+    'B....B..........D.......B....B',
+    'B.F..B..................B....B',
+    'B....B........F.........B....B',
+    'B..F.B..................B....B',
+    'B....B.........F........B....B',
+    'BF...........L.G....F........B',
+    'B..F....F..........FF........B',
+    'B..........FBBBBBB...........B',
+    'B..B......................B..B',
+    'B..BB......F.FFF.........BB..B',
+    'B............................B',
+    'B............................B',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    ]
+
+
