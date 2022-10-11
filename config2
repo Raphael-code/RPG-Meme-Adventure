@@ -1,0 +1,71 @@
+import pygame, sys
+from config import *
+from sprite import *
+from sprite2 import *
+
+#le mode de jeux est initialiser a "Menu"
+Mode_Jeux="Menu"
+
+#Donnée necessaire pour les classe
+SCREEN = WIDTH, HEIGHT = 1200, 600
+win = pygame.display.set_mode(SCREEN, pygame.NOFRAME)
+
+#charge image des arrière plan
+background_1=pygame.image.load('img/plateau-menu.PNG')
+background_2=pygame.image.load('img/sol.PNG')
+
+#charge image des boutons des modes de jeux
+img_Bouton_Histoire=pygame.image.load('img/Mode-Histoire.png')
+img_Bouton_Boss=pygame.image.load('img/Mode-Boss.png')
+img_Bouton_Duels=pygame.image.load('img/Mode-Duels.png')
+img_Bouton_Parametre=pygame.image.load('img/Mode-Paramètre.png')
+#charge les boutons des modes de jeu
+Bouton_Histoire = Button(img_Bouton_Histoire, (202, 50), 500, 200)
+Bouton_Boss = Button(img_Bouton_Boss, (202, 50), 500, 275)
+Bouton_Duels = Button(img_Bouton_Duels, (202, 50), 500, 350)
+Bouton_Parametre = Button(img_Bouton_Parametre, (202, 50), 500, 425)
+
+#charge image Boss
+img_boss=pygame.image.load('img/boss.png')
+#charge Boss
+boss = Boss(img_boss, (160, 184), 520, 200)
+
+#charge image attaque boss
+img_atk_boss=pygame.image.load("img/Attaque-Ennemie.png")
+#charge attaque Boss
+groupeAtkBoss1=pygame.sprite.Group() #1er attaque du boss
+for x in range (-2,3,4):
+    for y in range (25,576,50):
+        Atk_boss=Attaqueboss([x,0], (16, 16), img_atk_boss,590,y)
+        groupeAtkBoss1.add(Atk_boss)
+
+groupeAtkBoss2=pygame.sprite.Group() #2e attaque du boss
+for x in range (25,1176,1150):
+    for y in range (25,576,50):
+        Atk_boss=Attaqueboss([2,0], (16, 16), img_atk_boss,x,y)
+        groupeAtkBoss2.add(Atk_boss)
+
+groupeAtkBoss3=pygame.sprite.Group() #3e attaque du boss
+for y in range (25,576,550):
+    for x in range (25,1176,50):
+        Atk_boss=Attaqueboss([0,2], (16, 16), img_atk_boss,x,y)
+        groupeAtkBoss3.add(Atk_boss)
+
+groupeAtkBoss4=pygame.sprite.Group() #4e attaque du boss
+for y in range (-2,3,4):
+    for x in range (25,1176,50):
+        Atk_boss=Attaqueboss([0,y], (16, 16), img_atk_boss,x,295)
+        groupeAtkBoss4.add(Atk_boss)
+
+AllAttaqueBoss=pygame.sprite.Group() #Groupe de toute les attaques
+AllAttaqueBoss.add(groupeAtkBoss1)
+AllAttaqueBoss.add(groupeAtkBoss2)
+AllAttaqueBoss.add(groupeAtkBoss3)
+AllAttaqueBoss.add(groupeAtkBoss4)
+
+#charge image des objet des modes de jeux
+img_Tonneau=pygame.image.load('img/tonneau.png')
+#charge les objets des modes de jeu
+Objet_tonneau = Objet_destructible(img_Tonneau, (45, 51), 100, 50)
+
+
