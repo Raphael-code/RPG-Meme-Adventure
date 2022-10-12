@@ -1,6 +1,8 @@
 import pygame, sys
 from config import *
+from config2 import *
 from sprite import *
+frmo sprite2 import *
 from random import *
 import time
 #charge l'ecran
@@ -10,7 +12,7 @@ ecran=pygame.display.set_mode((1200,600))
 clock=pygame.time.Clock()
 running=True
 while running:
-    clock.tick(60)
+    clock.tick(fps)
 
     #dans le menu
     if Mode_Jeux=="Menu":
