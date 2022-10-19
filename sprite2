@@ -53,6 +53,7 @@ class Button(pygame.sprite.Sprite):
 class Boss(pygame.sprite.Sprite):
     def __init__(self, img, scale, x, y):
         super(Boss, self).__init__()
+
         self.image = img
         self.scale = scale
         self.image = pygame.transform.scale(self.image, self.scale)
@@ -95,7 +96,7 @@ class Boss(pygame.sprite.Sprite):
         else:
             self.visible=False
 
-    def boss_mort(self):
+    def mort(self):
         if self.Hp<=0:
             img=pygame.image.load("img/boss2.png")
             self.image=pygame.transform.scale(img, self.scale)
@@ -230,3 +231,121 @@ class Objet_non_destructible(pygame.sprite.Sprite):
         l'objet ne perd pas de pv car il est indestructible
         """
         self.Hp=self.Hp
+
+
+#classe du joueur
+class Player(pygame.sprite.Sprite):
+    def __init__(self,x,y,width,height):
+        self.marche_haut = [pygame.image.load('img/Player1haut1.png'), pygame.image.load('img/Player1haut2.png'), pygame.image.load('img/Player1haut3.png')]
+        self.marche_droite = [pygame.image.load('img/Player1droite1.png'), pygame.image.load('img/Player1droite2.png'), pygame.image.load('img/Player1droite3.png')]
+        self.marche_gauche = [pygame.image.load('img/Player1gauche1.png'), pygame.image.load('img/Player1gauche2.png'), pygame.image.load('img/Player1gauche3.png')]
+        self.marche_bas = [pygame.image.load('img/Player1bas1.png'), pygame.image.load('img/Player1bas2.png'), pygame.image.load('img/Player1bas3.png')]
+        self.x = x
+        self.y = y
+        self.width = 26
+        self.height = 30
+        self.vel = 2
+        self.gauche = False
+        self.droite = False
+        self.bas = False
+        self.haut = False
+        self.walkCount = 0
+        self.standing = True
+        self.hitbox = (self.x, self.y, self.width, self.height)
+        self.Hp=6
+        self.visible=True
+
+
+    def draw(self, win):
+        """
+        crée les animations du personnage
+        entré: win
+        """
+        if self.visible:
+            if self.walkCount >= 120:
+                self.walkCount = 0
+
+            if not(self.standing):  #si le persos est en train de marcher
+                if self.gauche:
+                    win.blit(self.marche_gauche[self.walkCount//60+1], (self.x,self.y))
+                    self.walkCount += 1
+                elif self.droite:
+                    win.blit(self.marche_droite[self.walkCount//60+1], (self.x,self.y))
+                    self.walkCount +=1
+                elif self.haut:
+                    win.blit(self.marche_haut[self.walkCount//60+1], (self.x,self.y))
+                    self.walkCount +=1
+                elif self.bas:
+                    win.blit(self.marche_bas[self.walkCount//60+1], (self.x,self.y))
+                    self.walkCount +=1
+            else:                  #si le persos ne marche pas
+                if self.droite:
+                    win.blit(self.marche_droite[0], (self.x, self.y))
+                elif self.gauche:
+                    win.blit(self.marche_gauche[0], (self.x, self.y))
+                elif self.haut:
+                    win.blit(self.marche_haut[0], (self.x, self.y))
+                else:
+                    win.blit(self.marche_bas[0], (self.x, self.y))
+            self.hitbox=(self.x,self.y,self.width,self.height) #definie la hitbox du perso
+            pygame.draw.rect(win, (255,0,0),self.hitbox,2)  #dessine la hitbox
+        else:
+            self.hitbox=(0,0,0,0) #fait disparaitre sa hitbox
+
+    def hit(self):
+        """
+        fait perdre des pv au perso
+        return : pv restant, int
+        """
+        if self.Hp>0:
+            self.Hp-=1
+        else:
+            self.visible=False
+
+    def mort(self):
+        if self.Hp<=0:
+            return True
+
+#classe attaque du boss
+class Attaqueplayer(pygame.sprite.Sprite):
+    def __init__(self,Vitesse,scale,img,x,y):
+        pygame.sprite.Sprite.__init__(self)
+
+        self.vitesse=Vitesse
+        self.image=img
+        self.scale = scale
+        self.image = pygame.transform.scale(self.image, self.scale)
+        self.rect=self.image.get_rect()
+        self.rect.x=x
+        self.rect.y=y
+        self.hitbox=(self.rect.x,self.rect.y,self.scale[0],self.scale[1])
+        self.visible=True
+
+    def update(self):
+        """
+        modifie la taille de l'image
+        entre: self,image
+        """
+        self.image = pygame.transform.scale(img, self.scale) #modifie la taille du sprite
+
+    def draw(self,win):
+        """
+        dessine les attaaques du player
+        entre: self,win
+        """
+        if self.visible:
+            if(self.rect.left<0) or (self.rect.right>1200) or (self.rect.top<0) or (self.rect.bottom>600): #si la balle sort de l'ecran
+                Attaqueplayer.mort(self)
+            self.rect=self.rect.move(self.vitesse) #fait deplacer la balle
+            win.blit(self.image, self.rect)
+            self.hitbox=(self.rect.x,self.rect.y,self.scale[0],self.scale[1]) # définie la hitbox de l'attaque ennemie
+            pygame.draw.rect(win, (255,0,0),self.hitbox,2)   #dessine la hitbox
+        else:
+            self.hitbox=(0,0,0,0) #fait disparaitre sa hitbox
+
+    def mort(self):
+        """
+        fait disparaitre la balle
+        entre: self
+        """
+        self.visible=False
