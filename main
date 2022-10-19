@@ -1,16 +1,104 @@
-import pygame, sys
-from config import *
-from config2 import *
+import pygame
 from sprite import *
-frmo sprite2 import *
+from config import *
+import sys
 from random import *
 import time
-#charge l'ecran
-ecran=pygame.display.set_mode((1200,600))
 
-#initialisation de la boucle
-clock=pygame.time.Clock()
-running=True
+ecran = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+
+
+class Game:
+    # je crée la classe du code centrale afin de mieux m'y retrouver
+    def __init__(self):
+        # je crée __init__ qui va crée l'affichage de mon jeu
+        pygame.init()  # j'initialise pygame
+        # je crée la fenetre que je vais afficher
+        self.ecran = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+        self.clock = pygame.time.Clock()  # je crée la boucle d'affichage
+        self.running = True
+
+        self.character_spritesheet = Spritesheet(
+            'img/character.png')  # j'assigne ma fiche de sprite personnage a la variable d'afichage de mon personnage
+        self.terrain_spritesheet = Spritesheet(
+            'img/terrain.png')  # j'assigne ma fiche de sprite terrain a la variable d'afichage de mes terrain
+        self.enemy_spritesheet = Spritesheet('img/enemy.png')
+
+    def cree_Map(self):
+        for i, rangee in enumerate(map):
+            for j, colonne in enumerate(rangee):  # je crée un tableau qui sera ma carte ou si sur la rangée i a la
+                # colonne i il y a un'b' alors il crée un block au coordoné et si il y a un 'p' alors il crée un
+                # joueur au coordoné
+                Ground(self, j, i)
+                if colonne == "B":
+                    Block(self, j, i)
+                if colonne == "P":
+                    Player(self, j, i)
+                if colonne == "F":
+                    Fleur(self, j, i)
+                if colonne == "L":
+                    Lave(self, j, i)
+                if colonne == "G":
+                    GroundBoss(self, j, i)
+                if colonne == "E":
+                    Flaque(self, j, i)
+                if colonne == "V":
+                    Enemy(self, j, i)
+
+    def new(self):
+        # quand une nouvelle partie ce lance
+
+        self.playing = True
+        self.all_sprite = pygame.sprite.LayeredUpdates()
+        self.blocks = pygame.sprite.LayeredUpdates()
+        self.ennemie = pygame.sprite.LayeredUpdates()
+        self.attack = pygame.sprite.LayeredUpdates()  # a chaque action il vérifie les couches des entité pour
+        # verifier les interraction
+
+        self.cree_Map()
+
+    def events(self):
+        # la boucle des evenement du jeu
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.playing = False
+                self.running = False
+                # si le joueur ne joue pas le jeu s'arrete
+
+    def update(self):
+        # la boucle  de maj du jeu
+        self.all_sprite.update()  # tout les sprite se mette a jour en permanence
+
+    def draw(self):
+        # la boucle d'affichage
+        self.ecran.fill(BLACK)  # Je remplie mon écran de noir
+        self.all_sprite.draw(self.ecran)  # la fonction dessine tout les sprites
+        self.clock.tick(FPS)  # Le jeu affiche autant d'image par seconde que la variable fps le dit
+        pygame.display.update()  # la fonction draw redessine chaque sprites a chaque reboot
+
+    def main(self):
+        # la boucle du jeu qui s'arrete lorsque le player ne joue plus et qui fais en sorte que dés que le clavier
+        # réagis ou qu'il y a un evenement le jeu se met a jour et le dessine sur l'écran
+        while self.playing:
+            self.events()
+            self.update()
+            self.draw()
+        self.running = False
+
+    def game_over(self):
+        pass
+
+    def intro(self):
+        pass
+
+
+g = Game()
+# charge l'ecran
+
+
+# initialisation de la boucle
+clock = pygame.time.Clock()
+running = True
 while running:
     clock.tick(60)
 
@@ -109,3 +197,11 @@ while running:
             pygame.quit()
             print("fermeture du jeu")
 
+
+# Je lance une nouvelle partie
+while g.running:
+    g.main()  # tant que le jeu est lancer les fonction events update et draw se lance en continue jusque a l'arret
+    # du jeu
+    g.game_over()
+sys.exit()
+pygame.quit()
