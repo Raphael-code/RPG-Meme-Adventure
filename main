@@ -12,7 +12,7 @@ ecran=pygame.display.set_mode((1200,600))
 clock=pygame.time.Clock()
 running=True
 while running:
-    clock.tick(fps)
+    clock.tick(60)
 
     #dans le menu
     if Mode_Jeux=="Menu":
@@ -22,8 +22,10 @@ while running:
             Mode_Jeux='Histoire'
         if Bouton_Duels.draw(win):
             Mode_Jeux='Duels'
+            boss,AllAttaqueBoss,Objet_tonneau=mode_duel()
         if Bouton_Boss.draw(win):
             Mode_Jeux='Boss'
+            player, boss, AllAttaqueBoss, AllobjetsBoss,timer_colision_player_dgt,timer_colision_player_attaque,img_atk_player,AllAttaquePlayer,derniere_action = charge_element_mode_boss() #charge le mode boss
         if Bouton_Parametre.draw(win):
             Mode_Jeux='Paramètre'
 
@@ -35,18 +37,61 @@ while running:
 
     elif Mode_Jeux=="Boss": #dans le mode Boss
         ecran.blit(background_2,(0,0))
+
+        timer_colision_player_dgt=timer_colision(timer_colision_player_dgt)
+        timer_colision_player_attaque=timer_attaque(timer_colision_player_attaque)
+
+        #interaction entre objet
         for Atk_boss in AllAttaqueBoss:
-        #si l'attaque ennemie touche le boss ou un tonneau
+            #si l'attaque ennemie touche le boss
             if (Atk_boss.rect.y < boss.hitbox[1] + boss.hitbox[3] and Atk_boss.rect.y + 16 > boss.hitbox[1] and Atk_boss.rect.x + 16 > boss.hitbox[0] and Atk_boss.rect.x < boss.hitbox[0] + boss.hitbox[2]):
                 Atk_boss.rebond() #l'attaque rebondit
-            if (Atk_boss.rect.y < Objet_tonneau.hitbox[1] + Objet_tonneau.hitbox[3] and Atk_boss.rect.y + 16 > Objet_tonneau.hitbox[1] and Atk_boss.rect.x + 16 > Objet_tonneau.hitbox[0] and Atk_boss.rect.x < Objet_tonneau.hitbox[0] + Objet_tonneau.hitbox[2]):
+            for Objet in AllobjetsBoss:
+                #si l'attaque ennemie touche un objet
+                if (Atk_boss.rect.y < Objet.hitbox[1] + Objet.hitbox[3] and Atk_boss.rect.y + 16 > Objet.hitbox[1] and Atk_boss.rect.x + 16 > Objet.hitbox[0] and Atk_boss.rect.x < Objet.hitbox[0] + Objet.hitbox[2]):
+                    Atk_boss.rebond()
+                    Objet.hit() #l'objet prend des dgt
+            #si l'attaque ennemie touche le joueur
+            if timer_colision_player_dgt==0 and (Atk_boss.rect.y < player.hitbox[1] + player.hitbox[3] and Atk_boss.rect.y + 16 > player.hitbox[1] and Atk_boss.rect.x + 16 > player.hitbox[0] and Atk_boss.rect.x < player.hitbox[0] + player.hitbox[2]):
                 Atk_boss.rebond()
-                Objet_tonneau.hit() #le tonneau prend des dgt
-            Atk_boss.draw(win)
-        boss.draw(win)
-        Objet_tonneau.draw(win)
+                player.hit()
+                timer_colision_player_dgt=1 #le persos ne prend pas de dgt apres s'etre deja pris une attaque pendant les 20 prochaine images
 
-        if boss.boss_mort():
+        #deplacement du player
+        if not(Colision_player(AllobjetsBoss,player,boss,AllAttaqueBoss)): #si le joueur n'est pas en colision
+            derniere_action, gauche=deplacement_gauche_player(player,derniere_action)
+            derniere_action, droite=deplacement_droite_player(player,derniere_action)
+            derniere_action, haut =deplacement_haut_player(player,derniere_action)
+            derniere_action, bas=deplacement_bas_player(player,derniere_action)
+            pas_deplacement_player(player)
+        else: #sinon bloquer le personnage dans une des directions
+            if derniere_action =="gauche":
+                derniere_action, droite=deplacement_droite_player(player,derniere_action)
+                pas_deplacement_player(player)
+            if derniere_action =="droite":
+                derniere_action, gauche=deplacement_gauche_player(player,derniere_action)
+                pas_deplacement_player(player)
+            if derniere_action =="haut":
+                derniere_action, bas=deplacement_bas_player(player,derniere_action)
+                pas_deplacement_player(player)
+            if derniere_action =="bas":
+                derniere_action, haut=deplacement_haut_player(player,derniere_action)
+                pas_deplacement_player(player)
+        print(derniere_action)
+
+        #attaque du player
+        AllAttaquePlayer, timer_colision_player_attaque=lance_atk_player(AllAttaquePlayer, timer_colision_player_attaque,derniere_action,img_atk_player,player)
+
+        #affiche les sprites
+        charge_sprite_duel(AllobjetsBoss,boss,player,AllAttaqueBoss,AllAttaquePlayer)
+
+        #si le boss meurt
+        if boss.mort():
+            time.sleep(3)
+            Mode_Jeux="Menu"      #retour au menu
+
+        #si le player meurt
+        if player.mort():
             time.sleep(3)
             Mode_Jeux="Menu"      #retour au menu
 
@@ -56,10 +101,10 @@ while running:
 
 
     pygame.display.flip() #actualise la page
-
     for event in pygame.event.get():
 
         if event.type==pygame.QUIT:    #si on ferme le jeu
             running=False
             pygame.quit()
             print("fermeture du jeu")
+
