@@ -20,6 +20,7 @@ while running:
         #affiche les boutons des modes de jeux dans le menu dans le menu
         if Bouton_Histoire.draw(win):
             Mode_Jeux='Histoire'
+            g.new()
         if Bouton_Duels.draw(win):
             Mode_Jeux='Duels'
             boss,AllAttaqueBoss,Objet_tonneau=mode_duel()
@@ -29,8 +30,8 @@ while running:
         if Bouton_Parametre.draw(win):
             Mode_Jeux='Paramètre'
 
-    elif Mode_Jeux=="Histoire": #dans le mode histoire
-        ecran.blit(background_2,(0,0))
+    #elif Mode_Jeux=="Histoire": #dans le mode histoire
+
 
     elif Mode_Jeux=="Duels": #dans le mode duels
         ecran.blit(background_2,(0,0))
