@@ -1,11 +1,10 @@
 import pygame
-from sprite import *
-from config import *
+from sprite2 import *
+from config2 import *
+
 import sys
 from random import *
 import time
-
-ecran = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 
 
 class Game:
@@ -14,18 +13,24 @@ class Game:
         # je crée __init__ qui va crée l'affichage de mon jeu
         pygame.init()  # j'initialise pygame
         # je crée la fenetre que je vais afficher
+        pygame.display.set_caption('Chad Adventure')
+        pygame.display.set_icon(gigachad)
         self.ecran = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
         self.clock = pygame.time.Clock()  # je crée la boucle d'affichage
+
         self.running = True
 
-        self.character_spritesheet = Spritesheet(
-            'img/character.png')  # j'assigne ma fiche de sprite personnage a la variable d'afichage de mon personnage
-        self.terrain_spritesheet = Spritesheet(
-            'img/terrain.png')  # j'assigne ma fiche de sprite terrain a la variable d'afichage de mes terrain
-        self.enemy_spritesheet = Spritesheet('img/enemy.png')
+        self.character_spritesheet = Spritesheet('img/character.png')  # j'assigne ma fiche de sprite personnage a la
+        # variable d'afichage de mon personnage
+        self.terrain_spritesheet = Spritesheet('img/terrain.png')  # j'assigne ma fiche de sprite terrain a la
+        # variable d'afichage de mes terrain
+        self.enemy_spritesheet = Spritesheet('img/enemy.png')  # j'assigne ma fiche de sprite enemy a la variable
+        # d'afichage de mes ennemies
+        self.attack_spritesheet = Spritesheet('img/attack.png') # j'assigne ma fiche de sprite attack a la variable
+        # d'afichage de mes attaques
 
-    def cree_Map(self):
-        for i, rangee in enumerate(map):
+    def cree_Map0(self):
+        for i, rangee in enumerate(map0):
             for j, colonne in enumerate(rangee):  # je crée un tableau qui sera ma carte ou si sur la rangée i a la
                 # colonne i il y a un'b' alors il crée un block au coordoné et si il y a un 'p' alors il crée un
                 # joueur au coordoné
@@ -33,7 +38,7 @@ class Game:
                 if colonne == "B":
                     Block(self, j, i)
                 if colonne == "P":
-                    Player(self, j, i)
+                    self.player = player(self, j, i)
                 if colonne == "F":
                     Fleur(self, j, i)
                 if colonne == "L":
@@ -44,10 +49,25 @@ class Game:
                     Flaque(self, j, i)
                 if colonne == "V":
                     Enemy(self, j, i)
+                if colonne == "0":
+                    pass
+                if colonne == "1":
+                    pass
+                if colonne == "2":
+                    pass
+                if colonne == "3":
+                    pass
+                if colonne == "4":
+                    pass
+                if colonne == "5":
+                   pass
 
     def new(self):
         # quand une nouvelle partie ce lance
-
+        pygame.mixer.init()
+        pygame.mixer.music.load('music/Music-3.ogg')
+        pygame.mixer.music.set_volume(0.2)
+        pygame.mixer.music.play()
         self.playing = True
         self.all_sprite = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
@@ -55,7 +75,7 @@ class Game:
         self.attack = pygame.sprite.LayeredUpdates()  # a chaque action il vérifie les couches des entité pour
         # verifier les interraction
 
-        self.cree_Map()
+        self.cree_Map0()
 
     def events(self):
         # la boucle des evenement du jeu
@@ -64,6 +84,16 @@ class Game:
                 self.playing = False
                 self.running = False
                 # si le joueur ne joue pas le jeu s'arrete
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if self.player.facing == 'up':
+                        Attack(self, self.player.rect.x, self.player.rect.y - TAILLE_TUILE)
+                    if self.player.facing == 'down':
+                        Attack(self, self.player.rect.x, self.player.rect.y + TAILLE_TUILE)
+                    if self.player.facing == 'left':
+                        Attack(self, self.player.rect.x - TAILLE_TUILE, self.player.rect.y)
+                    if self.player.facing == 'right':
+                        Attack(self, self.player.rect.x + TAILLE_TUILE, self.player.rect.y)
 
     def update(self):
         # la boucle  de maj du jeu
@@ -93,115 +123,9 @@ class Game:
 
 
 g = Game()
-# charge l'ecran
-
-
-# initialisation de la boucle
-clock = pygame.time.Clock()
-running = True
-while running:
-    clock.tick(60)
-
-    #dans le menu
-    if Mode_Jeux=="Menu":
-        ecran.blit(background_1,(0,0))
-        #affiche les boutons des modes de jeux dans le menu dans le menu
-        if Bouton_Histoire.draw(win):
-            Mode_Jeux='Histoire'
-            g.new()
-        if Bouton_Duels.draw(win):
-            Mode_Jeux='Duels'
-            boss,AllAttaqueBoss,Objet_tonneau=mode_duel()
-        if Bouton_Boss.draw(win):
-            Mode_Jeux='Boss'
-            player, boss, AllAttaqueBoss, AllobjetsBoss,timer_colision_player_dgt,timer_colision_player_attaque,img_atk_player,AllAttaquePlayer,derniere_action = charge_element_mode_boss() #charge le mode boss
-        if Bouton_Parametre.draw(win):
-            Mode_Jeux='Paramètre'
-
-    #elif Mode_Jeux=="Histoire": #dans le mode histoire
-
-
-    elif Mode_Jeux=="Duels": #dans le mode duels
-        ecran.blit(background_2,(0,0))
-
-    elif Mode_Jeux=="Boss": #dans le mode Boss
-        ecran.blit(background_2,(0,0))
-
-        timer_colision_player_dgt=timer_colision(timer_colision_player_dgt)
-        timer_colision_player_attaque=timer_attaque(timer_colision_player_attaque)
-
-        #interaction entre objet
-        for Atk_boss in AllAttaqueBoss:
-            #si l'attaque ennemie touche le boss
-            if (Atk_boss.rect.y < boss.hitbox[1] + boss.hitbox[3] and Atk_boss.rect.y + 16 > boss.hitbox[1] and Atk_boss.rect.x + 16 > boss.hitbox[0] and Atk_boss.rect.x < boss.hitbox[0] + boss.hitbox[2]):
-                Atk_boss.rebond() #l'attaque rebondit
-            for Objet in AllobjetsBoss:
-                #si l'attaque ennemie touche un objet
-                if (Atk_boss.rect.y < Objet.hitbox[1] + Objet.hitbox[3] and Atk_boss.rect.y + 16 > Objet.hitbox[1] and Atk_boss.rect.x + 16 > Objet.hitbox[0] and Atk_boss.rect.x < Objet.hitbox[0] + Objet.hitbox[2]):
-                    Atk_boss.rebond()
-                    Objet.hit() #l'objet prend des dgt
-            #si l'attaque ennemie touche le joueur
-            if timer_colision_player_dgt==0 and (Atk_boss.rect.y < player.hitbox[1] + player.hitbox[3] and Atk_boss.rect.y + 16 > player.hitbox[1] and Atk_boss.rect.x + 16 > player.hitbox[0] and Atk_boss.rect.x < player.hitbox[0] + player.hitbox[2]):
-                Atk_boss.rebond()
-                player.hit()
-                timer_colision_player_dgt=1 #le persos ne prend pas de dgt apres s'etre deja pris une attaque pendant les 20 prochaine images
-
-        #deplacement du player
-        if not(Colision_player(AllobjetsBoss,player,boss,AllAttaqueBoss)): #si le joueur n'est pas en colision
-            derniere_action, gauche=deplacement_gauche_player(player,derniere_action)
-            derniere_action, droite=deplacement_droite_player(player,derniere_action)
-            derniere_action, haut =deplacement_haut_player(player,derniere_action)
-            derniere_action, bas=deplacement_bas_player(player,derniere_action)
-            pas_deplacement_player(player)
-        else: #sinon bloquer le personnage dans une des directions
-            if derniere_action =="gauche":
-                derniere_action, droite=deplacement_droite_player(player,derniere_action)
-                pas_deplacement_player(player)
-            if derniere_action =="droite":
-                derniere_action, gauche=deplacement_gauche_player(player,derniere_action)
-                pas_deplacement_player(player)
-            if derniere_action =="haut":
-                derniere_action, bas=deplacement_bas_player(player,derniere_action)
-                pas_deplacement_player(player)
-            if derniere_action =="bas":
-                derniere_action, haut=deplacement_haut_player(player,derniere_action)
-                pas_deplacement_player(player)
-        print(derniere_action)
-
-        #attaque du player
-        AllAttaquePlayer, timer_colision_player_attaque=lance_atk_player(AllAttaquePlayer, timer_colision_player_attaque,derniere_action,img_atk_player,player)
-
-        #affiche les sprites
-        charge_sprite_duel(AllobjetsBoss,boss,player,AllAttaqueBoss,AllAttaquePlayer)
-
-        #si le boss meurt
-        if boss.mort():
-            time.sleep(3)
-            Mode_Jeux="Menu"      #retour au menu
-
-        #si le player meurt
-        if player.mort():
-            time.sleep(3)
-            Mode_Jeux="Menu"      #retour au menu
-
-
-    elif Mode_Jeux=="Paramètre": #dans les paramètres
-        ecran.blit(background_2,(0,0))
-
-
-    pygame.display.flip() #actualise la page
-    for event in pygame.event.get():
-
-        if event.type==pygame.QUIT:    #si on ferme le jeu
-            running=False
-            pygame.quit()
-            print("fermeture du jeu")
-
-
-# Je lance une nouvelle partie
+g.intro()
+g.new()
 while g.running:
-    g.main()  # tant que le jeu est lancer les fonction events update et draw se lance en continue jusque a l'arret
-    # du jeu
+    g.main()
     g.game_over()
-sys.exit()
 pygame.quit()
